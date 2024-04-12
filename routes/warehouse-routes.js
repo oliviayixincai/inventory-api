@@ -10,4 +10,8 @@ router
   .route("/:id/inventories")
   .get(inventoryController.getWarehouseInventories);
 
+router
+  .route("/:id")
+  .delete(warehouseController.deleteWarehouse);
+
 module.exports = router;
