@@ -14,7 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "email-validator": "^2.0.4",
     "express": "^4.19.2",
     "knex": "^3.1.0",
     "mysql2": "^3.9.4"
