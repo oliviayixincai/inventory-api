@@ -23,6 +23,28 @@ const getWarehouses = async (_req, res) => {
   }
 };
 
+const getOneWarehouse = async (req, res) => {
+  try {
+    const warehouseFound = await knex("warehouses")
+      .where({
+        id: req.params.id,
+      })
+      .first();
+
+    if (!warehouseFound) {
+      return res.status(404).json({
+        message: `Warehouse ID ${req.params.id} not found`,
+      });
+    }
+
+    res.status(200).json(warehouseFound);
+  } catch (error) {
+    res.status(500).json({
+      message: `Unable to retrieve Warehouse ID ${req.params.id}`,
+    });
+  }
+};
+
 const addWarehouse = async (req, res) => {
   if (
     !req.body.warehouse_name ||
@@ -35,14 +57,7 @@ const addWarehouse = async (req, res) => {
     !req.body.contact_email
   ) {
     return res.status(400).json({
-      message: "Please provide complete information for the warehouse",
-    });
-  }
-
-  //validate the email
-  if (!validator.validate(req.body.contact_email)) {
-    return res.status(400).json({
-      message: "Please provide a correct email address for the warehouse",
+      message: "Please provide complete information",
     });
   }
 
@@ -53,7 +68,16 @@ const addWarehouse = async (req, res) => {
   );
   if (!regExp.test(req.body.contact_phone)) {
     return res.status(400).json({
-      message: "Please provide a correct phone number for the warehouse",
+      type: "phone",
+      message: "Please provide a correct phone number",
+    });
+  }
+
+  //validate the email
+  if (!validator.validate(req.body.contact_email)) {
+    return res.status(400).json({
+      type: "email",
+      message: "Please provide a correct email address",
     });
   }
 
@@ -82,8 +106,6 @@ const addWarehouse = async (req, res) => {
   }
 };
 
-
-
 const deleteWarehouse = async (req, res) => {
   const warehouseId = req.params.id;
 
@@ -104,4 +126,5 @@ module.exports = {
   getWarehouses,
   addWarehouse,
   deleteWarehouse,
+  getOneWarehouse,
 };
