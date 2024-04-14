@@ -1,3 +1,5 @@
+const { get } = require("../routes/warehouse-routes");
+
 const knex = require("knex")(require("../knexfile"));
 
 const getWarehouseInventories = async (req, res) => {
@@ -19,6 +21,105 @@ const getWarehouseInventories = async (req, res) => {
   }
 };
 
+const getAllInventories = async (req, res) => {
+  try {
+    const data = await knex("inventories")
+      .join("warehouses", "inventories.warehouse_id", "warehouses.id")
+      .select(
+        "inventories.id",
+        "warehouses.warehouse_name",
+        "inventories.item_name",
+        "inventories.description",
+        "inventories.category",
+        "inventories.status",
+        "inventories.quantity"
+      );
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).send(`Unable to retrieve inventory data: ${err}`);
+  }
+}
+
+
+
+const getInventory = async (req, res) => {
+  const inventoryId = req.params.id;
+  try {
+    const data = await knex("inventories")
+      .join("warehouses", "inventories.warehouse_id", "warehouses.id")
+      .select(
+        "inventories.id",
+        "warehouses.warehouse_name",
+        "inventories.item_name",
+        "inventories.description",
+        "inventories.category",
+        "inventories.status",
+        "inventories.quantity"
+      )
+      .where("inventories.id", inventoryId)
+      .first();
+    if (!data) {
+      return res.status(404).json({ message: "Inventory ID not found" });
+    }
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).send(`Unable to retrieve inventory data: ${err}`);
+  }
+};
+
+
+
+const addInventory = async (req, res) => {
+  const { warehouse_id, item_name, description, category, status, quantity } = req.body;
+  if (!warehouse_id || !item_name || !description || !category || !status || !quantity) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+  
+  if (isNaN(warehouse_id) || isNaN(quantity)) {
+    return res.status(400).json({ message: "warehouse_id and quantity must be numbers" });
+  }
+  try {
+    const warehouse = await knex("warehouses").where("id", warehouse_id).first();
+    if (!warehouse) {
+      return res.status(400).json({ message: "warehouse_id does not exist" });
+    }
+    const [newInventory] = await knex("inventories")
+      .insert({
+        warehouse_id,
+        item_name,
+        description,
+        category,
+        status,
+        quantity
+      })
+      .returning('*');
+      
+      res.status(201).json(newInventory[0]);
+  } catch (err) {
+    console.error("Error adding inventory:", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const deleteInventory = async (req, res) => {
+  const inventoryId = req.params.id;
+  try {
+    const count = await knex("inventories").where("id", inventoryId).del();
+    if (!count) {
+      return res.status(404).json({ message: "Inventory ID not found" });
+    }
+    res.status(204).json();
+  } catch (err) {
+    res.status(500).send(`Unable to delete inventory data: ${err}`);
+  }
+};
+
+
 module.exports = {
   getWarehouseInventories,
+  getAllInventories,
+  getInventory, 
+  addInventory,
+  deleteInventory
 };
+
