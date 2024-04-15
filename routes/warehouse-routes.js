@@ -6,12 +6,14 @@ router
   .route("/")
   .get(warehouseController.getWarehouses)
   .post(warehouseController.addWarehouse);
+
 router
   .route("/:id/inventories")
   .get(inventoryController.getWarehouseInventories);
 
-router.route("/:id").delete(warehouseController.deleteWarehouse);
-
-router.route("/:id").get(warehouseController.getOneWarehouse);
+router.route("/:id")
+  .delete(warehouseController.deleteWarehouse)
+  .get(warehouseController.getOneWarehouse)
+  .put(warehouseController.updateWarehouse);
 
 module.exports = router;

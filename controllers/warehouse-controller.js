@@ -57,14 +57,7 @@ const addWarehouse = async (req, res) => {
     !req.body.contact_email
   ) {
     return res.status(400).json({
-      message: "Please provide complete information for the warehouse",
-    });
-  }
-
-  //validate the email
-  if (!validator.validate(req.body.contact_email)) {
-    return res.status(400).json({
-      message: "Please provide a correct email address for the warehouse",
+      message: "Please provide complete information",
     });
   }
 
@@ -75,7 +68,16 @@ const addWarehouse = async (req, res) => {
   );
   if (!regExp.test(req.body.contact_phone)) {
     return res.status(400).json({
-      message: "Please provide a correct phone number for the warehouse",
+      type: "phone",
+      message: "Please provide a correct phone number",
+    });
+  }
+
+  //validate the email
+  if (!validator.validate(req.body.contact_email)) {
+    return res.status(400).json({
+      type: "email",
+      message: "Please provide a correct email address",
     });
   }
 
@@ -120,9 +122,75 @@ const deleteWarehouse = async (req, res) => {
   }
 };
 
+const updateWarehouse = async (req, res) => {
+  if (
+    !req.body.warehouse_name ||
+    !req.body.address ||
+    !req.body.city ||
+    !req.body.country ||
+    !req.body.contact_name ||
+    !req.body.contact_position ||
+    !req.body.contact_phone ||
+    !req.body.contact_email
+  ) {
+    return res.status(400).json({
+      message:
+        "All fields are required, please provide complete information for the warehouse",
+    });
+  }
+
+  // Validate email
+  if (!validator.validate(req.body.contact_email)) {
+    return res.status(400).json({
+      message: "Please provide a correct email address format",
+    });
+  }
+
+  // Validate phone number
+  const regExp = new RegExp(
+    /^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/,
+    "i"
+  );
+  if (!regExp.test(req.body.contact_phone)) {
+    return res.status(400).json({
+      message: "Please provide a correct phone number format",
+    });
+  }
+
+  try {
+    const updateCount = await knex("warehouses")
+      .where({ id: req.params.id })
+      .update({
+        warehouse_name: req.body.warehouse_name,
+        address: req.body.address,
+        city: req.body.city,
+        country: req.body.country,
+        contact_name: req.body.contact_name,
+        contact_position: req.body.contact_position,
+        contact_phone: req.body.contact_phone,
+        contact_email: req.body.contact_email,
+      });
+
+    if (updateCount === 0) {
+      return res.status(404).json({ message: `Warehouse ID ${id} not found` });
+    }
+
+    const updatedWarehouse = await knex("warehouses")
+      .where({ id: req.params.id })
+      .first();
+    res.status(200).json(updatedWarehouse);
+  } catch (error) {
+    console.error(`Error updating warehouse: ${error}`);
+    res.status(500).json({
+      message: "Unable to update warehouse details due to an internal error",
+    });
+  }
+};
+
 module.exports = {
   getWarehouses,
   addWarehouse,
   deleteWarehouse,
   getOneWarehouse,
+  updateWarehouse,
 };
